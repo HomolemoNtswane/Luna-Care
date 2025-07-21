@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LunaCare - Advanced Period Tracker Dashboard</title>
+    <meta name="description" content="Comprehensive period tracking dashboard with cycle predictions, symptom tracking, and health insights">
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #E53E3E;
+            --primary-light: #FEE2E2;
+            --secondary-color: #4F46E5;
+            --text-color: #374151;
+            --light-gray: #F3F4F6;
+            --border-radius: 12px;
+        }
+        
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: #FFF5F5;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .dashboard-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        
+        .input-card {
+            transition: all 0.2s ease;
+            border: 1px solid #E5E7EB;
+        }
+        
+        .input-card:focus-within {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+        
+        .info-card {
+            background: linear-gradient(135deg, #FEF2F2 0%, #FFF 100%);
+            border: 1px solid #FECACA;
+            transition: transform 0.2s ease;
+        }
+        
+        .info-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .symptom-checkbox:checked {
+            background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-container {
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-white bg-opacity-80 flex items-center justify-center z-50 hidden">
+        <div class="loading-spinner h-12 w-12 border-4 border-t-red-500 border-r-red-500 border-b-red-300 border-l-red-300 rounded-full"></div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div class="dashboard-container w-full max-w-6xl my-8">
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-red-600 to-red-500 p-6 text-white">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold">LunaCare</h1>
+                    <p class="text-red-100">Your personalized menstrual health companion</p>
+                </div>
+                <div class="mt-4 md:mt-0 text-sm bg-white bg-opacity-20 px-4 py-2 rounded-full">
+                    <span id="currentDate" class="font-medium"></span>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="p-6">
+            <!-- Input Section -->
+            <section class="mb-10">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Cycle Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="input-card bg-white p-4 rounded-lg">
+                        <label for="lastPeriodDate" class="block text-sm font-medium text-gray-700 mb-1">Last Period Start</label>
+                        <input type="date" id="lastPeriodDate" class="w-full p-2 border-0 focus:ring-0 text-gray-900">
+                    </div>
+                    
+                    <div class="input-card bg-white p-4 rounded-lg">
+                        <label for="cycleLengthInput" class="block text-sm font-medium text-gray-700 mb-1">Cycle Length (days)</label>
+                        <input type="number" id="cycleLengthInput" value="28" min="20" max="45" class="w-full p-2 border-0 focus:ring-0 text-gray-900">
+                    </div>
+                    
+                    <div class="input-card bg-white p-4 rounded-lg">
+                        <label for="periodDurationInput" class="block text-sm font-medium text-gray-700 mb-1">Period Duration (days)</label>
+                        <input type="number" id="periodDurationInput" value="5" min="2" max="10" class="w-full p-2 border-0 focus:ring-0 text-gray-900">
+                    </div>
+                    
+                    <div class="flex items-end">
+    <button id="trackPeriodBtn" onclick="window.location.href='Cycle-Tracker.html'" class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+        Update Predictions
+    </button>
+</div>
+                </div>
+            </section>
+            
+            <!-- Stats Overview -->
+            <section class="mb-10">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Cycle Overview</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="info-card p-5 rounded-lg">
+                        <h3 class="text-sm font-medium text-red-600 uppercase tracking-wider mb-1">Next Period</h3>
+                        <p id="nextPeriodDate" class="text-2xl font-bold text-gray-900">--</p>
+                        <p id="daysUntilNextPeriod" class="text-sm text-gray-500 mt-1">-- days remaining</p>
+                    </div>
+                    
+                    <div class="info-card p-5 rounded-lg">
+                        <h3 class="text-sm font-medium text-red-600 uppercase tracking-wider mb-1">Ovulation Date</h3>
+                        <p id="ovulationDate" class="text-2xl font-bold text-gray-900">--</p>
+                        <p class="text-sm text-gray-500 mt-1">Approximate</p>
+                    </div>
+                    
+                    <div class="info-card p-5 rounded-lg">
+                        <h3 class="text-sm font-medium text-red-600 uppercase tracking-wider mb-1">Fertile Window</h3>
+                        <p id="fertileWindow" class="text-xl font-bold text-gray-900">-- to --</p>
+                        <p class="text-sm text-gray-500 mt-1">Most fertile days</p>
+                    </div>
+                    
+                    <div class="info-card p-5 rounded-lg">
+                        <h3 class="text-sm font-medium text-red-600 uppercase tracking-wider mb-1">Cycle Length</h3>
+                        <p id="displayCycleLength" class="text-2xl font-bold text-gray-900">-- days</p>
+                        <p class="text-sm text-gray-500 mt-1">Average duration</p>
+                    </div>
+                    
+                    <div class="info-card p-5 rounded-lg">
+                        <h3 class="text-sm font-medium text-red-600 uppercase tracking-wider mb-1">Period Duration</h3>
+                        <p id="displayPeriodDuration" class="text-2xl font-bold text-gray-900">-- days</p>
+                        <p class="text-sm text-gray-500 mt-1">Typical length</p>
+                    </div>
+                    
+                    <div class="info-card p-5 rounded-lg">
+                        <h3 class="text-sm font-medium text-red-600 uppercase tracking-wider mb-1">Current Phase</h3>
+                        <p id="currentPhase" class="text-2xl font-bold text-gray-900">--</p>
+                        <p class="text-sm text-gray-500 mt-1">Of menstrual cycle</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Symptom Tracking -->
+            <section class="mb-10">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Symptom Tracker</h2>
+                    <button id="saveSymptomsBtn" class="text-sm text-red-600 hover:text-red-800 font-medium">
+                        Save Symptoms
+                    </button>
+                </div>
+                
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                    <div id="symptomGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                        <!-- Symptoms will be dynamically loaded here -->
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Notes Section -->
+            <section>
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Cycle Notes</h2>
+                <textarea id="notes" rows="4" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all" placeholder="Record any observations, mood changes, or other notes about your cycle..."></textarea>
+                <div class="mt-2 flex justify-end">
+                    <button id="saveNotesBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        Save Notes
+                    </button>
+                </div>
+            </section>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="bg-gray-50 p-4 border-t border-gray-200 text-center text-sm text-gray-500">
+            <p>FemTrack is for informational purposes only. Consult a healthcare provider for medical advice.</p>
+            <p class="mt-1">Data is stored locally in your browser.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const elements = {
+                lastPeriodDate: document.getElementById('lastPeriodDate'),
+                cycleLengthInput: document.getElementById('cycleLengthInput'),
+                periodDurationInput: document.getElementById('periodDurationInput'),
+                trackPeriodBtn: document.getElementById('trackPeriodBtn'),
+                nextPeriodDate: document.getElementById('nextPeriodDate'),
+                displayCycleLength: document.getElementById('displayCycleLength'),
+                displayPeriodDuration: document.getElementById('displayPeriodDuration'),
+                daysUntilNextPeriod: document.getElementById('daysUntilNextPeriod'),
+                ovulationDate: document.getElementById('ovulationDate'),
+                fertileWindow: document.getElementById('fertileWindow'),
+                currentPhase: document.getElementById('currentPhase'),
+                notes: document.getElementById('notes'),
+                saveNotesBtn: document.getElementById('saveNotesBtn'),
+                saveSymptomsBtn: document.getElementById('saveSymptomsBtn'),
+                loadingOverlay: document.getElementById('loadingOverlay'),
+                symptomGrid: document.getElementById('symptomGrid'),
+                currentDate: document.getElementById('currentDate')
+            };
+            
+            // Current date display
+            const today = new Date();
+            elements.currentDate.textContent = today.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            // Symptom data
+            const symptoms = [
+                'Cramps', 'Headache', 'Bloating', 'Fatigue', 'Mood Swings',
+                'Acne', 'Tender Breasts', 'Cravings', 'Backache', 'Irritability',
+                'Nausea', 'Insomnia', 'Increased Appetite', 'Joint Pain', 'Dizziness',
+                'Anxiety', 'Depression', 'Hot Flashes', 'Constipation', 'Diarrhea'
+            ];
+            
+            // Initialize the application
+            function init() {
+                createSymptomCheckboxes();
+                setupEventListeners();
+                loadSavedData();
+            }
+            
+            // Create symptom checkboxes
+            function createSymptomCheckboxes() {
+                elements.symptomGrid.innerHTML = '';
+                
+                symptoms.forEach(symptom => {
+                    const symptomId = `symptom-${symptom.toLowerCase().replace(/\s+/g, '-')}`;
+                    
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center';
+                    
+                    div.innerHTML = `
+                        <input type="checkbox" id="${symptomId}" value="${symptom}" 
+                               class="symptom-checkbox h-5 w-5 rounded border-gray-300 text-red-600 focus:ring-red-500">
+                        <label for="${symptomId}" class="ml-2 text-sm text-gray-700">${symptom}</label>
+                    `;
+                    
+                    elements.symptomGrid.appendChild(div);
+                });
+            }
+            
+            // Set up event listeners
+            function setupEventListeners() {
+                elements.trackPeriodBtn.addEventListener('click', calculateCycleInfo);
+                elements.saveNotesBtn.addEventListener('click', saveAllData);
+                elements.saveSymptomsBtn.addEventListener('click', saveAllData);
+                
+                // Auto-save after 2 seconds of inactivity
+                let notesTimeout;
+                elements.notes.addEventListener('input', () => {
+                    clearTimeout(notesTimeout);
+                    notesTimeout = setTimeout(saveAllData, 2000);
+                });
+                
+                // Recalculate when inputs change
+                [elements.lastPeriodDate, elements.cycleLengthInput, elements.periodDurationInput].forEach(input => {
+                    input.addEventListener('change', calculateCycleInfo);
+                });
+            }
+            
+            // Load saved data from localStorage
+            function loadSavedData() {
+                try {
+                    // Load basic data
+                    if (localStorage.getItem('lastPeriodDate')) {
+                        elements.lastPeriodDate.value = localStorage.getItem('lastPeriodDate');
+                    }
+                    
+                    if (localStorage.getItem('cycleLength')) {
+                        elements.cycleLengthInput.value = localStorage.getItem('cycleLength');
+                    }
+                    
+                    if (localStorage.getItem('periodDuration')) {
+                        elements.periodDurationInput.value = localStorage.getItem('periodDuration');
+                    }
+                    
+                    if (localStorage.getItem('notes')) {
+                        elements.notes.value = localStorage.getItem('notes');
+                    }
+                    
+                    // Load symptoms
+                    const savedSymptoms = JSON.parse(localStorage.getItem('selectedSymptoms') || '[]');
+                    savedSymptoms.forEach(symptom => {
+                        const checkbox = document.querySelector(`input[value="${symptom}"]`);
+                        if (checkbox) checkbox.checked = true;
+                    });
+                    
+                    // Calculate if we have a last period date
+                    if (elements.lastPeriodDate.value) {
+                        calculateCycleInfo();
+                    }
+                } catch (error) {
+                    console.error('Error loading saved data:', error);
+                }
+            }
+            
+            // Save all data to localStorage
+            function saveAllData() {
+                try {
+                    // Save basic data
+                    localStorage.setItem('lastPeriodDate', elements.lastPeriodDate.value);
+                    localStorage.setItem('cycleLength', elements.cycleLengthInput.value);
+                    localStorage.setItem('periodDuration', elements.periodDurationInput.value);
+                    localStorage.setItem('notes', elements.notes.value);
+                    
+                    // Save symptoms
+                    const selectedSymptoms = Array.from(
+                        document.querySelectorAll('#symptomGrid input[type="checkbox"]:checked')
+                    ).map(checkbox => checkbox.value);
+                    
+                    localStorage.setItem('selectedSymptoms', JSON.stringify(selectedSymptoms));
+                    
+                    // Show confirmation
+                    showTemporaryMessage('Data saved successfully');
+                } catch (error) {
+                    console.error('Error saving data:', error);
+                    showTemporaryMessage('Failed to save data', true);
+                }
+            }
+            
+            // Calculate cycle information
+            function calculateCycleInfo() {
+                showLoading(true);
+                
+                // Validate inputs
+                if (!validateInputs()) {
+                    showLoading(false);
+                    return;
+                }
+                
+                // Get input values
+                const lastPeriodDate = new Date(elements.lastPeriodDate.value);
+                const cycleLength = parseInt(elements.cycleLengthInput.value);
+                const periodDuration = parseInt(elements.periodDurationInput.value);
+                
+                // Calculate next period date
+                const nextPeriodDate = new Date(lastPeriodDate);
+                nextPeriodDate.setDate(lastPeriodDate.getDate() + cycleLength);
+                
+                // Calculate days until next period
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                const timeDiff = nextPeriodDate.getTime() - today.getTime();
+                const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+                
+                // Calculate ovulation date (approx 14 days before next period)
+                const ovulationDate = new Date(nextPeriodDate);
+                ovulationDate.setDate(nextPeriodDate.getDate() - 14);
+                
+                // Calculate fertile window (5 days before ovulation to 1 day after)
+                const fertileWindowStart = new Date(ovulationDate);
+                fertileWindowStart.setDate(ovulationDate.getDate() - 5);
+                
+                const fertileWindowEnd = new Date(ovulationDate);
+                fertileWindowEnd.setDate(ovulationDate.getDate() + 1);
+                
+                // Determine current cycle phase
+                const cycleDay = Math.floor((today.getTime() - lastPeriodDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                let currentPhase = '';
+                
+                if (cycleDay <= periodDuration) {
+                    currentPhase = 'Menstruation';
+                } else if (cycleDay <= 13) {
+                    currentPhase = 'Follicular Phase';
+                } else if (cycleDay <= 15) {
+                    currentPhase = 'Ovulation';
+                } else {
+                    currentPhase = 'Luteal Phase';
+                }
+                
+                // Update UI
+                updateCycleDisplay({
+                    nextPeriodDate,
+                    daysDiff,
+                    ovulationDate,
+                    fertileWindowStart,
+                    fertileWindowEnd,
+                    cycleLength,
+                    periodDuration,
+                    currentPhase
+                });
+                
+                // Save data
+                saveAllData();
+                
+                showLoading(false);
+            }
+            
+            // Validate user inputs
+            function validateInputs() {
+                if (!elements.lastPeriodDate.value) {
+                    showTemporaryMessage('Please select your last period start date', true);
+                    return false;
+                }
+                
+                const cycleLength = parseInt(elements.cycleLengthInput.value);
+                if (isNaN(cycleLength) || cycleLength < 20 || cycleLength > 45) {
+                    showTemporaryMessage('Cycle length must be between 20-45 days', true);
+                    return false;
+                }
+                
+                const periodDuration = parseInt(elements.periodDurationInput.value);
+                if (isNaN(periodDuration) || periodDuration < 2 || periodDuration > 10) {
+                    showTemporaryMessage('Period duration must be between 2-10 days', true);
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            // Update the cycle information display
+            function updateCycleDisplay(data) {
+                // Format dates
+                const formatDate = date => date.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                });
+                
+                // Update elements
+                elements.nextPeriodDate.textContent = formatDate(data.nextPeriodDate);
+                elements.displayCycleLength.textContent = `${data.cycleLength} days`;
+                elements.displayPeriodDuration.textContent = `${data.periodDuration} days`;
+                elements.currentPhase.textContent = data.currentPhase;
+                
+                // Days until next period
+                if (data.daysDiff > 0) {
+                    elements.daysUntilNextPeriod.textContent = `${data.daysDiff} days remaining`;
+                } else if (data.daysDiff === 0) {
+                    elements.daysUntilNextPeriod.textContent = 'Today';
+                } else {
+                    elements.daysUntilNextPeriod.textContent = `${Math.abs(data.daysDiff)} days ago`;
+                }
+                
+                // Ovulation and fertile window
+                elements.ovulationDate.textContent = formatDate(data.ovulationDate);
+                elements.fertileWindow.textContent = `${formatDate(data.fertileWindowStart)} - ${formatDate(data.fertileWindowEnd)}`;
+            }
+            
+            // Show loading spinner
+            function showLoading(show) {
+                elements.loadingOverlay.classList.toggle('hidden', !show);
+            }
+            
+            // Show temporary message
+            function showTemporaryMessage(message, isError = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg text-white font-medium ${
+                    isError ? 'bg-red-600' : 'bg-green-600'
+                }`;
+                messageDiv.textContent = message;
+                
+                document.body.appendChild(messageDiv);
+                
+                setTimeout(() => {
+                    messageDiv.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+                    setTimeout(() => document.body.removeChild(messageDiv), 300);
+                }, 3000);
+            }
+            
+            // Initialize the app
+            init();
+        });
+    </script>
+</body>
+</html>

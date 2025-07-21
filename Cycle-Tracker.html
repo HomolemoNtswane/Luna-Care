@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Cycle & Wellness Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #F8F9FA;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .container {
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 95%;
+            max-width: 1200px;
+            text-align: center;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle at top left, rgba(233, 30, 99, 0.05), transparent 40%),
+                               radial-gradient(circle at bottom right, rgba(156, 39, 176, 0.05), transparent 40%);
+            z-index: 0;
+        }
+
+        h1 {
+            color: #e91e63;
+            margin-bottom: 30px;
+            font-size: 2.8em;
+            letter-spacing: -0.8px;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+
+        .current-day-info {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 1;
+            line-height: 1.5;
+        }
+
+        .phase-details-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+            width: 100%;
+            max-width: 1100px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .phase-card {
+            background-color: #fcf6f8;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
+            text-align: left;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: 1px solid #fbe3eb;
+        }
+
+        .phase-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .phase-card h3 {
+            color: #c2185b;
+            font-size: 1.6em;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .phase-card h3 .icon {
+            font-size: 1.2em;
+            color: #e91e63;
+        }
+
+        .phase-card p {
+            font-size: 1em;
+            line-height: 1.7;
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        .phase-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .phase-card li {
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95em;
+            color: #666;
+            padding-bottom: 3px;
+            border-bottom: 1px dashed #fbdada;
+        }
+        .phase-card li:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .phase-card li strong {
+            color: #e91e63;
+            font-weight: 600;
+        }
+
+        .phase-insight-card {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #fce4ec 0%, #ffe0b2 100%);
+            color: #6a1b9a;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 1.15em;
+            line-height: 1.8;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+        .phase-insight-card h3 {
+            color: #880e4f;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+        .phase-insight-card .icon {
+            color: #e91e63;
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(145deg, #e91e63, #c2185b);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.05em;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            margin-top: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .back-link:hover {
+            background: linear-gradient(145deg, #c2185b, #e91e63);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .back-link .icon {
+            font-size: 1.1em;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 25px; border-radius: 15px; }
+            h1 { font-size: 2.2em; margin-bottom: 25px; }
+            .current-day-info { font-size: 1.1em; margin-bottom: 20px; }
+            .phase-details-section { grid-template-columns: 1fr; gap: 20px; }
+            .phase-card { padding: 20px; border-radius: 12px; }
+            .phase-card h3 { font-size: 1.4em; }
+            .phase-card p { font-size: 0.95em; }
+            .phase-insight-card { padding: 20px; font-size: 1em; }
+            .phase-insight-card h3 { font-size: 1.5em; }
+            .back-link {
+                padding: 10px 20px;
+                font-size: 1em;
+                border-radius: 10px;
+                margin-top: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Your Personalized Cycle Insights</h1>
+
+        <div id="currentDayInfo" class="current-day-info"></div>
+
+        <div class="phase-insight-card">
+            <h3><i class="fas fa-lightbulb icon"></i> Your Daily Insight</h3>
+            <p id="dailyInsight"></p>
+        </div>
+
+        <div class="phase-details-section">
+            <div class="phase-card">
+                <h3><i class="fas fa-chart-line icon"></i> Cycle Overview</h3>
+                <p>Understand the key phases of your menstrual cycle and what to expect each day.</p>
+                <ul>
+                    <li><span>Cycle Length:</span> <strong id="displayCycleLength">N/A</strong></li>
+                    <li><span>Period Duration:</span> <strong id="displayPeriodDuration">N/A</strong></li>
+                    <li><span>Next Period Expected:</span> <strong id="nextPeriodDate">N/A</strong></li>
+                    <li><span>Next Ovulation Expected:</span> <strong id="nextOvulationDate">N/A</strong></li>
+                </ul>
+            </div>
+            <div class="phase-card">
+                <h3><i class="fas fa-calendar-alt icon"></i> Phase Dates</h3>
+                <p>Predicted start and end dates for your current cycle's phases.</p>
+                <ul>
+                    <li><span>Period Phase:</span> <strong id="periodDates">N/A</strong></li>
+                    <li><span>Follicular Phase:</span> <strong id="follicularDates">N/A</strong></li>
+                    <li><span>Fertile Window:</span> <strong id="fertileWindowDates">N/A</strong></li>
+                    <li><span>Ovulation Day:</span> <strong id="ovulationDates">N/A</strong></li>
+                    <li><span>Luteal Phase:</span> <strong id="lutealDates">N/A</strong></li>
+                </ul>
+            </div>
+            <div class="phase-card">
+                <h3><i class="fas fa-female icon"></i> Your Body, Your Cycle</h3>
+                <p>Each phase brings unique hormonal changes and symptoms. Listen to your body!</p>
+                <p><strong>Period:</strong> Low energy, cramps, bleeding. Focus on rest & gentle activities.</p>
+                <p><strong>Follicular:</strong> Rising estrogen, increased energy, clearer skin. Great for planning & social activities!</p>
+                <p><strong>Ovulation:</strong> Peak fertility, high energy, heightened senses. Ideal for important tasks & connection.</p>
+                <p><strong>Luteal:</strong> Rising progesterone, PMS symptoms possible (fatigue, mood swings). Practice self-care & wind down.</p>
+            </div>
+              <div class="phase-card">
+                <h3><i class="fas fa-sticky-note icon"></i> Saved Notes & Symptoms</h3>
+                <p>Your recent notes and logged symptoms from the dashboard.</p>
+                <div id="displayNotes" style="font-style: italic; color: #777; margin-bottom: 10px; max-height: 100px; overflow-y: auto; padding: 5px; border: 1px solid #eee; border-radius: 5px;"></div>
+                <div id="displaySymptoms" style="color: #777; max-height: 100px; overflow-y: auto; padding: 5px; border: 1px solid #eee; border-radius: 5px;"></div>
+            </div>
+        </div>
+
+        <a href="LunaCare.html" class="back-link">
+            <span class="icon fas fa-arrow-left"></span> Back to Dashboard
+        </a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentDayInfoElem = document.getElementById('currentDayInfo');
+            const periodDatesElem = document.getElementById('periodDates');
+            const follicularDatesElem = document.getElementById('follicularDates');
+            const fertileWindowDatesElem = document.getElementById('fertileWindowDates');
+            const ovulationDatesElem = document.getElementById('ovulationDates');
+            const lutealDatesElem = document.getElementById('lutealDates');
+            const displayCycleLengthElem = document.getElementById('displayCycleLength');
+            const displayPeriodDurationElem = document.getElementById('displayPeriodDuration');
+            const nextPeriodDateElem = document.getElementById('nextPeriodDate');
+            const nextOvulationDateElem = document.getElementById('nextOvulationDate');
+            const displayNotesElem = document.getElementById('displayNotes');
+            const displaySymptomsElem = document.getElementById('displaySymptoms');
+            const dailyInsightElem = document.getElementById('dailyInsight');
+
+            const lastPeriodDateStr = localStorage.getItem('lastPeriodDate');
+            const cycleLength = parseInt(localStorage.getItem('cycleLength') || '28');
+            const periodDuration = parseInt(localStorage.getItem('periodDuration') || '5');
+            const savedNotes = localStorage.getItem('dailyNotes') || 'No notes saved yet.';
+            const savedSymptoms = JSON.parse(localStorage.getItem('symptoms') || '[]');
+
+            displayNotesElem.textContent = savedNotes;
+            displaySymptomsElem.textContent = savedSymptoms.length > 0 ? savedSymptoms.join(', ') : 'No symptoms logged yet.';
+
+            if (!lastPeriodDateStr) {
+                currentDayInfoElem.innerHTML = "<h4>Please set your last period date on the dashboard to see your cycle predictions.</h4>";
+                // No need to hide calendar-container as it's already removed
+                document.querySelector('.phase-details-section').innerHTML = "<p style='color:#777; font-style:italic;'>Cycle data not available. Please input your details on the dashboard.</p>";
+                document.querySelector('.phase-insight-card').style.display = 'none';
+                return;
+            }
+
+            const lastPeriodDate = new Date(lastPeriodDateStr);
+            lastPeriodDate.setHours(0, 0, 0, 0);
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            let diffTime = today.getTime() - lastPeriodDate.getTime();
+            let currentDayInCycle = Math.floor(diffTime / (1000 * 60 * 60 * 24)) % cycleLength;
+            currentDayInCycle = currentDayInCycle < 0 ? cycleLength + currentDayInCycle : currentDayInCycle;
+            currentDayInCycle = currentDayInCycle + 1;
+
+            currentDayInfoElem.textContent = `Today is Day ${currentDayInCycle} of your ${cycleLength}-day cycle.`;
+
+            const periodStartDay = 1;
+            const periodEndDay = periodDuration;
+            const ovulationDay = cycleLength - 14;
+            const fertileWindowStartDay = ovulationDay - 5;
+            const fertileWindowEndDay = ovulationDay + 2;
+            const follicularStartDay = periodEndDay + 1;
+            const follicularEndDay = fertileWindowStartDay -1;
+            const lutealStartDay = fertileWindowEndDay + 1;
+            const lutealEndDay = cycleLength;
+
+            const getDateFromCycleDay = (dayInCycle) => {
+                const date = new Date(lastPeriodDate);
+                date.setDate(lastPeriodDate.getDate() + dayInCycle - 1);
+                return date;
+            };
+
+            const nextPeriodDate = new Date(lastPeriodDate);
+            nextPeriodDate.setDate(lastPeriodDate.getDate() + cycleLength);
+
+            const nextOvulationDate = new Date(lastPeriodDate);
+            nextOvulationDate.setDate(lastPeriodDate.getDate() + (ovulationDay -1));
+
+            const formatDate = (date) => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+            displayCycleLengthElem.textContent = `${cycleLength} days`;
+            displayPeriodDurationElem.textContent = `${periodDuration} days`;
+            nextPeriodDateElem.textContent = formatDate(nextPeriodDate);
+            nextOvulationDateElem.textContent = formatDate(nextOvulationDate);
+
+            periodDatesElem.textContent = `${formatDate(getDateFromCycleDay(periodStartDay))} - ${formatDate(getDateFromCycleDay(periodEndDay))}`;
+            follicularDatesElem.textContent = `${formatDate(getDateFromCycleDay(follicularStartDay))} - ${formatDate(getDateFromCycleDay(follicularEndDay))}`;
+            fertileWindowDatesElem.textContent = `${formatDate(getDateFromCycleDay(fertileWindowStartDay))} - ${formatDate(getDateFromCycleDay(fertileWindowEndDay))}`;
+            ovulationDatesElem.textContent = formatDate(getDateFromCycleDay(ovulationDay));
+            lutealDatesElem.textContent = `${formatDate(getDateFromCycleDay(lutealStartDay))} - ${formatDate(getDateFromCycleDay(lutealEndDay))}`;
+
+            const insights = {
+                period: "During your period, it's normal to feel low on energy. Prioritize rest, stay hydrated, and try gentle exercises like stretching or walking. Nourish your body with iron-rich foods.",
+                follicular: "As you enter the follicular phase, estrogen levels rise, bringing increased energy and focus. This is a great time for new beginnings, setting goals, and social activities. Embrace your newfound vitality!",
+                fertile: "You are in your fertile window! Estrogen and LH are peaking, indicating ovulation is near. This is your most fertile time if you're trying to conceive. Pay attention to your body's subtle ovulation signs.",
+                ovulation: "Today is your predicted ovulation day! This is the most fertile day of your cycle. You might feel a surge of energy, heightened senses, or a slight discomfort on one side. Enjoy your peak energy!",
+                luteal: "Welcome to the luteal phase. Progesterone levels are rising, which can lead to PMS symptoms like fatigue, mood swings, or bloating. Focus on self-care, healthy eating, and calming activities. Be kind to yourself."
+            };
+
+            let currentPhase;
+            if (currentDayInCycle >= periodStartDay && currentDayInCycle <= periodEndDay) {
+                currentPhase = 'period';
+            } else if (currentDayInCycle === ovulationDay) {
+                currentPhase = 'ovulation';
+            } else if (currentDayInCycle >= fertileWindowStartDay && currentDayInCycle <= fertileWindowEndDay) {
+                currentPhase = 'fertile';
+            } else if (currentDayInCycle >= follicularStartDay && currentDayInCycle <= follicularEndDay) {
+                currentPhase = 'follicular';
+            } else if (currentDayInCycle >= lutealStartDay && currentDayInCycle <= lutealEndDay) {
+                currentPhase = 'luteal';
+            } else {
+                currentPhase = 'unknown';
+            }
+            dailyInsightElem.textContent = insights[currentPhase] || "Your cycle is unique! Keep tracking to uncover more personalized insights.";
+        });
+    </script>
+</body>
+</html>
